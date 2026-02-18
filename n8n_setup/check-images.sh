@@ -16,8 +16,8 @@ tar_files["final_version-n8n-mcp"]="n8n-mcp.tar"
 expected_images["final_version-postgres-mcp"]=":latest"
 tar_files["final_version-postgres-mcp"]="postgres-mcp.tar"
 
-expected_images["mcr.microsoft.com/playwright"]=":v1.49.1-noble"
-tar_files["mcr.microsoft.com/playwright"]="playwright-mcp.tar"
+expected_images["final_version-playwright-mcp"]=":latest"
+tar_files["final_version-playwright-mcp"]="playwright-mcp.tar"
 
 # RAG образы
 expected_images["ankane/pgvector"]=":latest"
