@@ -1,21 +1,22 @@
 {
   "mcpServers": {
     "playwright": {
-      "type": "stdio",
       "command": "docker",
       "args": [
         "exec",
         "-i",
+        "-e", "PLAYWRIGHT_CHROMIUM_SANDBOX=0",
+        "-e", "PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS=1",
         "mcp-playwright",
-        "npx",
-        "@playwright/mcp@latest",
-        "--headless"
+        "playwright-mcp",
+        "--headless",
+        "--no-sandbox",
+        "--executable-path",
+        "/ms-playwright/chromium-1212/chrome-linux64/chrome"
       ],
-      "disabled": false,
-      "autoApprove": []
+      "disabled": false
     },
     "postgres": {
-      "type": "stdio",
       "command": "docker",
       "args": [
         "exec",
@@ -24,11 +25,9 @@
         "mcp-server-postgres",
         "postgresql://n8n:n8n_password@pgvector:5432/n8n_vectors"
       ],
-      "disabled": false,
-      "autoApprove": []
+      "disabled": false
     },
     "n8n": {
-      "type": "stdio",
       "command": "docker",
       "args": [
         "exec",
@@ -39,8 +38,7 @@
       "env": {
         "N8N_API_URL": "http://host.docker.internal:5678/api/v1"
       },
-      "disabled": false,
-      "autoApprove": []
+      "disabled": false
     }
   }
 }
