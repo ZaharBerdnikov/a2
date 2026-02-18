@@ -1,0 +1,52 @@
+services:
+  # Playwright MCP Server
+  playwright:
+    image: final_version-playwright-mcp:latest
+    container_name: mcp-playwright
+    environment:
+      - PLAYWRIGHT_CHROMIUM_SANDBOX=0
+    networks:
+      - rag_network
+    stdin_open: true
+    tty: true
+    restart: unless-stopped
+    # Keep container running for docker exec
+    command: tail -f /dev/null
+
+  # Postgres MCP Server
+  postgres-mcp:
+    image: final_version-postgres-mcp:latest
+    container_name: mcp-postgres
+    environment:
+      - DATABASE_URL=postgresql://n8n:n8n_password@pgvector:5432/n8n_vectors
+    networks:
+      - rag_network
+    stdin_open: true
+    tty: true
+    restart: unless-stopped
+    command: tail -f /dev/null
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  # n8n MCP Server
+  n8n-mcp:
+    image: final_version-n8n-mcp:latest
+    container_name: mcp-n8n
+    environment:
+      - N8N_HOST=host.docker.internal
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - N8N_API_URL=http://host.docker.internal:5678
+      - N8N_API_KEY=${N8N_API_KEY}
+    networks:
+      - rag_network
+    restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    stdin_open: true
+    tty: true
+    command: tail -f /dev/null
+
+networks:
+  rag_network:
+    external: true

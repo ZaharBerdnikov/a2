@@ -1,0 +1,76 @@
+
+
+services:
+  postgres:
+    image: ankane/pgvector:latest
+    container_name: pgvector
+    environment:
+      POSTGRES_DB: n8n_vectors
+      POSTGRES_USER: n8n
+      POSTGRES_PASSWORD: n8n_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgvector_data:/var/lib/postgresql/data
+    networks:
+      - rag_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U n8n -d n8n_vectors"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    networks:
+      - rag_network
+    environment:
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-nomic-embed-text}
+    command: serve
+    restart: unless-stopped
+
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: n8n
+    environment:
+      N8N_DATABASE_TYPE: postgresdb
+      N8N_DATABASE_HOST: postgres
+      N8N_DATABASE_PORT: 5432
+      N8N_DATABASE_NAME: n8n_vectors
+      N8N_DATABASE_USER: n8n
+      N8N_DATABASE_PASSWORD: n8n_password
+      N8N_HOST: host.docker.internal
+      N8N_PORT: 5678
+      N8N_API_URL: http://host.docker.internal:5678/
+      WEBHOOK_URL: http://host.docker.internal:5678/
+      N8N_SECURE_COOKIE: false
+    ports:
+      - "5678:5678"
+    volumes:
+      - n8n_data:/home/node/.n8n
+    networks:
+      - rag_network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      ollama:
+        condition: service_started
+    restart: unless-stopped
+
+volumes:
+  pgvector_data:
+  ollama_data:
+  n8n_data:
+
+networks:
+  rag_network:
+    name: rag_network
+    driver: bridge
