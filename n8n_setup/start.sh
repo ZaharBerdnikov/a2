@@ -55,6 +55,11 @@ if ! bash check-images.sh; then
     error_exit "Образы не найдены после загрузки"
 fi
 
+# Подготовка Ollama (офлайн-режим)
+echo ""
+echo "Подготовка Ollama с локальной моделью..."
+bash setup-ollama.sh || error_exit "Не удалось подготовить Ollama"
+
 echo ""
 
 # Запуск RAG сервисов

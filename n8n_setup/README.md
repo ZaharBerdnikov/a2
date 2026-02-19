@@ -1,75 +1,37 @@
-# Инструкция по развёртыванию n8n MCP сервиса (ОФЛАЙН)
+# Инструкция по развёртыванию n8n MCP сервиса (ПОЛНОСТЬЮ ОФЛАЙН)
 
-## ⚠️ Важно: Подготовка к офлайн-работе
+## ⚠️ Важно: Полностью локальная работа без интернета
 
-Этот сервис работает **полностью локально без интернета**, но требует одноразовой подготовки:
-
-1. **Подготовка Ollama** - скачивание модели (требуется интернет 1 раз)
-2. **Загрузка Docker образов** - из локальных tar-файлов
-3. **Запуск** - полностью офлайн
+Этот сервис работает **полностью локально без интернета**. Все модели и образы поставляются локально.
 
 ## Требования
 
 - Docker и Docker Compose установлены
 - Доступ к tar-файлам образов в директории `docker_images/`
+- Модель в директории `embedders/` (для полностью офлайн работы)
 - Свободные порты: 5432 (PostgreSQL), 5678 (n8n), 11434 (Ollama)
-- ⚠️ Для первоначальной подготовки Ollama: доступ в интернет
 
-## Быстрый старт
+## Быстрый старт (ПОЛНОСТЬЮ ОФЛАЙН)
 
-### Автоматический запуск (всё включено)
+### 1. Проверьте наличие модели
+
+Для полностью офлайн работы необходима локальная модель в `embedders/`:
 
 ```bash
-# Проверка и загрузка образов + запуск всех сервисов
+# Проверка
+ls -la embedders/nomic-embed-text/
+```
+
+Если модели нет, смотрите раздел "Подготовка модели" ниже.
+
+### 2. Автоматический запуск
+
+```bash
+# Загрузка образов, подготовка Ollama и запуск всех сервисов
 bash start.sh
 ```
 
-### Ручной запуск по шагам
-
-#### Шаг 1: Подготовка Ollama (один раз с интернетом)
-
-```bash
-# Скачивание модели nomic-embed-text
-bash setup-ollama.sh
-```
-
-#### Шаг 2: Загрузка Docker образов (ОБЯЗАТЕЛЬНО!)
-
-⚠️ **Важно**: Docker Compose будет искать образы локально. Если их нет - попытается скачать из интернета.
-
-```bash
-# Загрузка всех образов из tar-файлов
-bash load-docker-images.sh
-
-# Проверка загруженных образов
-bash check-images.sh
-```
-
-Ожидаемые образы:
-- `final_version-n8n-mcp:latest`
-- `final_version-postgres-mcp:latest`
-- `mcr.microsoft.com/playwright:v1.49.1-noble`
-- `ankane/pgvector:latest`
-- `ollama/ollama:latest`
-- `n8nio/n8n:latest`
-
-#### Шаг 3: Запуск сервисов
-
-⚠️ **Важно**: Убедитесь что образы загружены (Шаг 2) перед запуском!
-
-```bash
-# Запуск RAG (PostgreSQL, Ollama, n8n)
-# Сеть rag_network создается автоматически
-docker compose -f RAG.yml up -d
-
-# Ожидание готовности PostgreQL
-docker compose -f RAG.yml ps
-
-# Запуск MCP серверов
-docker compose -f MCP.yml up -d
-```
-
-#### Шаг 4: Настройка API ключа n8n
+### 3. Настройка API ключа n8n
 
 1. Откройте n8n: http://localhost:5678
 2. Создайте API ключ в настройках
@@ -85,27 +47,20 @@ N8N_API_KEY=ваш_новый_api_ключ
 docker compose -f MCP.yml restart
 ```
 
-## Настройка агентов (KiloCode / OpenCode)
+## Подготовка модели (только для первоначальной настройки)
 
-### KiloCode
+Если у вас нет модели в `embedders/`, выполните на машине с интернетом:
 
-Скопируйте содержимое `configs/kiloconfig` в настройки MCP KiloCode.
+```bash
+# Экспорт модели для офлайн-использования
+bash export-model.sh
+```
 
-Используемые MCP серверы:
-- **postgres** - работа с БД (без npx, напрямую)
-- **n8n** - управление workflows (без npx, напрямую)
-- **playwright** - автоматизация браузера (✅ работает офлайн, браузеры в образе)
+Это создаст:
+- `embedders/nomic-embed-text/` — распакованная модель
+- `embedders/nomic-embed-text.tar.gz` — архив для переноса
 
-### OpenCode
-
-Скопируйте содержимое `configs/opencodeconfig` в настройки MCP OpenCode.
-
-## Доступные сервисы
-
-После запуска:
-- **n8n**: http://localhost:5678
-- **PostgreSQL**: localhost:5432
-- **Ollama**: localhost:11434
+Скопируйте папку `embedders/` на целевую машину.
 
 ## Перенос на другую машину (офлайн)
 
@@ -113,35 +68,25 @@ docker compose -f MCP.yml restart
 
 ```bash
 # Выполнить все шаги из "Быстрый старт"
-bash setup-ollama.sh
+bash export-model.sh
 bash load-docker-images.sh
-docker compose -f RAG.yml up -d
-docker compose -f MCP.yml up -d
 
-# Остановить сервисы
+# Остановить сервисы если запущены
 docker compose -f RAG.yml down
 docker compose -f MCP.yml down
-
-# Экспортировать volume Ollama
-docker run --rm -v ollama_data:/data -v $(pwd):/backup alpine tar czf /backup/ollama_data_backup.tar.gz -C /data .
 ```
 
 ### 2. Перенос на офлайн-машину
 
 Скопируйте:
-- Папку `n8n_setup/` целиком
-- Файл `ollama_data_backup.tar.gz`
+- Папку `n8n_setup/` целиком (включая `embedders/`)
 
 ### 3. Запуск на офлайн-машине
 
 ```bash
 cd n8n_setup
 
-# Импорт Ollama volume (если есть backup)
-docker volume create ollama_data
-docker run --rm -v ollama_data:/data -v $(pwd):/backup alpine tar xzf /backup/ollama_data_backup.tar.gz -C /data
-
-# Запуск (включает загрузку образов и запуск сервисов)
+# Запуск (включает загрузку образов, подготовку Ollama и запуск сервисов)
 bash start.sh
 ```
 
@@ -172,29 +117,20 @@ docker compose -f MCP.yml logs -f
 docker images | grep -E "(final_version|mcr.microsoft|ankane|ollama|n8nio)"
 ```
 
-### Проблема: образы не найдены
+### Проблема: модель не найдена
 
 ```bash
-# Повторная загрузка
-bash load-docker-images.sh
-bash check-images.sh
+# Проверка наличия модели в embedders/
+ls -la embedders/nomic-embed-text/
+
+# Если модели нет, выполните на машине с интернетом:
+bash export-model.sh
 ```
 
 ### Проблема: порт занят
 
 ```bash
 sudo netstat -tulpn | grep -E "(5432|5678|11434)"
-```
-
-### Проблема: Ollama не находит модель
-
-Если Ollama запущен, но модель не найдена:
-```bash
-# Проверка volume
-docker volume ls | grep ollama
-
-# Повторная подготовка (требуется интернет)
-bash setup-ollama.sh
 ```
 
 ## Архитектура
@@ -214,8 +150,8 @@ bash setup-ollama.sh
 │  │  (offline)  │  │  (offline)   │  │   (offline)  │         │
 │  └─────────────┘  └──────────────┘  └──────────────┘         │
 └───────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
+                               │
+                               ▼
 ┌───────────────────────────────────────────────────────────────┐
 │                      AI Agents                                 │
 │              (KiloCode / OpenCode)                             │
@@ -228,14 +164,46 @@ bash setup-ollama.sh
 |-----------|---------------|------------|
 | PostgreSQL | ✅ Работает | Полностью локально |
 | n8n | ✅ Работает | Полностью локально |
-| Ollama | ✅ Работает | После подготовки модели |
+| Ollama | ✅ Работает | Локальная модель из embedders/ |
 | Postgres MCP | ✅ Работает | Без npx, прямой вызов |
 | n8n MCP | ✅ Работает | Без npx, прямой вызов |
 | Playwright MCP | ✅ Работает | Браузеры встроены в образ, офлайн |
 
-## Известные ограничения
+## Структура проекта
 
-- **Ollama**: модель скачивается один раз, затем работает офлайн
+```
+n8n_setup/
+├── docker_images/          # Docker образы (.tar)
+├── dockerfiles/            # Dockerfile для сборки
+├── configs/                # Конфигурации MCP агентов
+├── embedders/              # Локальные модели (НОВОЕ)
+│   └── nomic-embed-text/   # Модель для Ollama
+├── RAG.yml                 # Docker Compose для RAG
+├── MCP.yml                 # Docker Compose для MCP серверов
+├── start.sh                # Основной скрипт запуска
+├── setup-ollama.sh         # Подготовка Ollama (офлайн)
+├── export-model.sh         # Экспорт модели (требует интернет)
+├── load-docker-images.sh   # Загрузка Docker образов
+├── check-images.sh         # Проверка образов
+└── .env                    # Переменные окружения
+```
+
+## Настройка агентов (KiloCode / OpenCode)
+
+### KiloCode
+
+Скопируйте содержимое `configs/kiloconfig` в настройки MCP KiloCode.
+
+### OpenCode
+
+Скопируйте содержимое `configs/opencodeconfig` в настройки MCP OpenCode.
+
+## Доступные сервисы
+
+После запуска:
+- **n8n**: http://localhost:5678
+- **PostgreSQL**: localhost:5432
+- **Ollama**: localhost:11434
 
 ## Сборка образов (для разработчиков)
 
