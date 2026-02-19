@@ -7,3 +7,8 @@ n8n_setup/embedders/nomic-embed-text/models/blobs/sha256-970aa74c0a90ef7482477cf
 n8n_setup/embedders/nomic-embed-text/models/blobs/sha256-c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4
 n8n_setup/embedders/nomic-embed-text/models/blobs/sha256-ce4a164fc04605703b485251fe9f1a181688ba0eb6badb80cc6335c0de17ca0d
 n8n_setup/embedders/nomic-embed-text/models/manifests/registry.ollama.ai/library/nomic-embed-text/latest
+n8n_setup/docker_images/postgres-mcp.tar
+n8n_setup/docker_images/playwright-mcp.tar
+n8n_setup/docker_images/n8nio-n8n-latest.tar
+n8n_setup/docker_images/n8n-mcp.tar
+n8n_setup/docker_images/ankane-pgvector-latest.tar
