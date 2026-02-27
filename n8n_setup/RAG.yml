@@ -68,6 +68,7 @@ services:
 volumes:
   pgvector_data:
   ollama_data:
+    name: ollama_data
   n8n_data:
 
 networks:

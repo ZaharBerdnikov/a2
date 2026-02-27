@@ -1,0 +1,40 @@
+services:
+  comfyui:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: comfyui
+    ports:
+      - "${COMFYUI_PORT:-8188}:8188"
+    volumes:
+      # Модели (сохраняются между пересборками)
+      - ./models/checkpoints:/app/models/checkpoints
+      - ./models/loras:/app/models/loras
+      - ./models/controlnet:/app/models/controlnet
+      - ./models/vae:/app/models/vae
+      - ./models/embeddings:/app/models/embeddings
+      - ./models/clip:/app/models/clip
+      - ./models/unet:/app/models/unet
+      - ./models/clip_vision:/app/models/clip_vision
+      # Входные и выходные данные
+      - ./input:/app/input
+      - ./output:/app/output
+      # Кастомные ноды (сохраняются)
+      - comfyui_custom_nodes:/app/custom_nodes
+    environment:
+      - COMFYUI_PORT=${COMFYUI_PORT:-8188}
+      # Список моделей для скачивания (через запятую)
+      - MODELS_TO_DOWNLOAD=${MODELS_TO_DOWNLOAD:-}
+      # HuggingFace токен (для некоторых моделей)
+      - HF_TOKEN=${HF_TOKEN:-}
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    restart: unless-stopped
+
+volumes:
+  comfyui_custom_nodes:

@@ -1,0 +1,62 @@
+# Environment variables
+.env
+.env.local
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# Models (большие файлы, скачиваются отдельно)
+models/checkpoints/*.safetensors
+models/checkpoints/*.ckpt
+models/loras/*.safetensors
+models/controlnet/*.safetensors
+models/vae/*.safetensors
+models/embeddings/*.pt
+models/embeddings/*.safetensors
+models/clip/*.safetensors
+models/unet/*.safetensors
+models/clip_vision/*.safetensors
+models/**/*.bin
+models/**/*.pth
+
+# Input/Output (генерируемые файлы)
+input/*.png
+input/*.jpg
+input/*.jpeg
+input/*.webp
+output/*.png
+output/*.jpg
+output/*.jpeg
+output/*.webp
+output/*.gif
+
+# Docker
+.dockerignore
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.temp
